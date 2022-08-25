@@ -18,6 +18,16 @@ const User = mongoose.model(
   "user"
 );
 
+const Profile = mongoose.model(
+  "profile",
+  {
+    userId: mongoose.Schema.Types.ObjectId,
+    displayName: String,
+    profilePicture: String,
+  },
+  "profile"
+);
+
 const app = express();
 
 const crypto = require("crypto");
@@ -63,6 +73,54 @@ app.post("/login", async (req, res) => {
   } else {
     res.status(401).send("Not authorized!");
   }
+});
+
+const checkToken = (req, res, next) => {
+  const token = req.headers["x-access-token"];
+  if (!token) return next();
+  try {
+    const info = jwt.verify(token, JWT_SECRET);
+    req.userId = info.id;
+    return next();
+  } catch (e) {
+    res.status(400).send("Invalid token!");
+  }
+};
+
+app.post("/update-profile", checkToken, async (req, res) => {
+  const userId = req.userId;
+
+  // TODO: validation
+  await Profile.findOneAndUpdate(
+    {
+      userId: userId,
+    },
+    {
+      displayName: req.body.displayName,
+      profilePicture: req.body.profilePicture,
+    },
+    {
+      upsert: true,
+    }
+  );
+
+  res.send("Profile updated!");
+});
+
+app.get("/me", checkToken, async (req, res) => {
+  const userId = req.userId;
+  const profile = await Profile.findOne({
+    userId,
+  });
+  res.send(profile);
+});
+
+app.get("/profile/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const profile = await Profile.findOne({
+    userId,
+  });
+  res.send(profile);
 });
 
 const port = 8080;
