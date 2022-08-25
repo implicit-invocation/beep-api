@@ -5,40 +5,14 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 mongoose.connect("mongodb://localhost:27017/beep");
 
-const User = mongoose.model(
-  "user",
-  {
-    username: {
-      type: String,
-      unique: true,
-    },
-    password: String,
-    verified: Boolean,
-  },
-  "user"
-);
+const User = require("./models/User");
+const Profile = require("./models/Profile");
 
-const Profile = mongoose.model(
-  "profile",
-  {
-    userId: mongoose.Schema.Types.ObjectId,
-    displayName: String,
-    profilePicture: String,
-  },
-  "profile"
-);
+const md5 = require("./utils/md5");
 
 const app = express();
 
-const crypto = require("crypto");
-const MD5_SALT = "troicaotrongxanhsuongsomlonglanh";
 const JWT_SECRET = "troicaotrongxanhsuongsomlonglanh";
-const md5 = (string) =>
-  crypto
-    .createHash("md5")
-    .update(MD5_SALT + string)
-    .digest("hex");
-
 const generateToken = (info, secret) => jwt.sign(info, secret);
 
 app.use(bodyParser.json());
