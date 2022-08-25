@@ -8,7 +8,10 @@ mongoose.connect("mongodb://localhost:27017/beep");
 const User = mongoose.model(
   "user",
   {
-    username: String,
+    username: {
+      type: String,
+      unique: true,
+    },
     password: String,
     verified: Boolean,
   },
@@ -32,10 +35,14 @@ app.use(bodyParser.json());
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = md5(password);
-  await User.create({
-    username,
-    password: hashedPassword,
-  });
+  try {
+    await User.create({
+      username,
+      password: hashedPassword,
+    });
+  } catch (e) {
+    return res.status(400).send("Duplicated username!");
+  }
   res.send("ok");
 });
 
